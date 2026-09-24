@@ -257,7 +257,7 @@ fn on_promoted_touch(shared: &crate::shared::Shared, message: u32, ms: &MSLLHOOK
     // Hover preserves mouse position but must not repeatedly steal typing focus.
     // Contact movement cancels a pending focus attempt until the pen lifts.
     if !is_pen(ms.dwExtraInfo) || message != WM_MOUSEMOVE || GESTURE.with(|v| v.get().contact) {
-        super::focus_restore::on_touch(shared, message, ms.pt, ms.time);
+        super::focus_restore::on_touch(shared, message, ms.pt);
     }
     // Use the last mouse position, including programmatic cursor movements.
     // The OS cursor may already reflect a preceding touch message.
@@ -291,6 +291,28 @@ mod tests {
         shared
     }
 
+    #[test]
+    fn appbar_work_area_change_keeps_anchor_but_display_change_clears_it() {
+        use windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
+        use windows::Win32::UI::WindowsAndMessaging::{
+            SPI_SETWORKAREA, WM_DISPLAYCHANGE, WM_SETTINGCHANGE,
+        };
+        let shared = enabled();
+        observe_native(&shared);
+        unsafe {
+            super::super::wnd_proc(
+                HWND::default(),
+                WM_SETTINGCHANGE,
+                WPARAM(SPI_SETWORKAREA.0 as usize),
+                LPARAM(0),
+            );
+        }
+        assert_eq!(NATIVE.with(|v| v.get().target(true)), Some((1600, 873)));
+        unsafe {
+            super::super::wnd_proc(HWND::default(), WM_DISPLAYCHANGE, WPARAM(0), LPARAM(0));
+        }
+        assert!(!NATIVE.with(|v| v.get().pending()));
+    }
     #[test]
     fn native_report_injection_and_physical_click_follow_distinct_paths() {
         let shared = enabled();

@@ -114,6 +114,9 @@ unsafe extern "system" fn wnd_proc(hwnd: HWND, msg: u32, w: WPARAM, l: LPARAM) -
                 }
             }
         }
+        // AppBar reservations (WM_SETTINGCHANGE / SPI_SETWORKAREA) do not
+        // change monitor bounds. Leave them on the default path so swiping a
+        // panel cannot discard pending mouse or keyboard-focus restoration.
         WM_DISPLAYCHANGE | WM_POWERBROADCAST => {
             touch_input::reset();
             native_touch::devices_changed();

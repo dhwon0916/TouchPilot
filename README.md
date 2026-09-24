@@ -32,3 +32,14 @@ Prerequisites for building: .NET SDK 10, Rust and Windows C++ build tools.
     cargo test --manifest-path engine/Cargo.toml
 
 Output: dist/TouchPilot. The included settings are separate from other apps.
+
+## AppBar swipe fix (2026-09-23)
+Native touch focus restoration now uses the activated panel when a swipe moves
+or hides it before the release point is hit-tested. Nonactivating touches still
+use hit-testing; input, window identity, app rules, and cancellation guards remain.
+Disabled focus restoration avoids unnecessary window lookups.
+
+TouchPilot already preserves pending restoration across AppBar work-area changes.
+A regression test now checks that behavior and verifies that actual display changes
+still clear the pending return. These updates were adapted from LittleBigMouse
+Touchscreen commit c994341b, retaining TouchPilot's separate settings and logging.
